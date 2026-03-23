@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  microsoft-mcp:
+    build: .
+    container_name: microsoft-mcp-server
+    
+    # Environment variables for Azure authentication
+    environment:
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}
+      MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID}
+      MCP_PORT: 8000
+      MCP_HOST: 0.0.0.0
+      DEBUG: ${DEBUG:-false}
+    
+    # Expose the port for HTTP transport
+    ports:
+      - "8000:8000"
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Usage:
+# 1. Create .env file with credentials:
+#    MICROSOFT_CLIENT_ID=...
+#    MICROSOFT_CLIENT_SECRET=...
+#    MICROSOFT_TENANT_ID=...
+#
+# 2. Run: docker-compose up -d
+#
+# 3. Logs: docker-compose logs -f microsoft-mcp
+#
+# 4. Stop: docker-compose down
